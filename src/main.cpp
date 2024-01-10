@@ -1,3 +1,4 @@
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <ESPAsyncWebServer.h>
@@ -7,16 +8,17 @@
 // Create AsyncWebServer object on port 80
 AsyncWebServer server(80);
 
-// Search for parameter in HTTP POST request
+// Search for parameters in HTTP POST request
 const char* PARAM_INPUT_1 = "ssid";
 const char* PARAM_INPUT_2 = "pass";
 const char* PARAM_INPUT_3 = "ip";
 const char* PARAM_INPUT_4 = "gateway";
 
-//Variables to save values from HTML form
+// Variables to save values from HTML form
 String ssid;
 String pass;
 String ip;
+
 String gateway;
 
 // File paths to save input values permanently
@@ -26,11 +28,7 @@ const char* ipPath = "/ip.txt";
 const char* gatewayPath = "/gateway.txt";
 
 IPAddress localIP;
-//IPAddress localIP(192, 168, 1, 200); // hardcoded
-
-// Set your Gateway IP address
 IPAddress localGateway;
-//IPAddress localGateway(192, 168, 1, 1); //hardcoded
 IPAddress subnet(255, 255, 0, 0);
 
 // Timer variables
@@ -39,9 +37,12 @@ const long interval = 10000;  // interval to wait for Wi-Fi connection (millisec
 
 // Set LED GPIO
 const int ledPin = 2;
-// Stores LED state
-
 String ledState;
+
+// Set your reset button GPIO pin
+const int resetButtonPin = 18;  // Change this to the actual GPIO pin you are using for the button
+unsigned long buttonPressedStartTime = 0;
+const long resetButtonDuration = 10000;  // 10 seconds
 
 // Initialize SPIFFS
 void initSPIFFS() {
@@ -81,13 +82,13 @@ void writeFile(fs::FS &fs, const char * path, const char * message){
   if(file.print(message)){
     Serial.println("- file written");
   } else {
-    Serial.println("- frite failed");
+    Serial.println("- write failed");
   }
 }
 
 // Initialize WiFi
 bool initWiFi() {
-  if(ssid=="" || ip==""){
+  if(ssid == "" || ip == "") {
     Serial.println("Undefined SSID or IP address.");
     return false;
   }
@@ -96,11 +97,11 @@ bool initWiFi() {
   localIP.fromString(ip.c_str());
   localGateway.fromString(gateway.c_str());
 
-
   if (!WiFi.config(localIP, localGateway, subnet)){
     Serial.println("STA Failed to configure");
     return false;
   }
+  
   WiFi.begin(ssid.c_str(), pass.c_str());
   Serial.println("Connecting to WiFi...");
 
@@ -133,6 +134,34 @@ String processor(const String& var) {
   return String();
 }
 
+void checkResetButton() {
+  // Check if the reset button is pressed
+  if (digitalRead(resetButtonPin) == LOW) {
+    // Button is pressed, start the timer
+    if (buttonPressedStartTime == 0) {
+      buttonPressedStartTime = millis();
+    }
+  } else {
+    // Button is released, reset the timer
+    buttonPressedStartTime = 0;
+  }
+
+  // Check if the button has been pressed for the specified duration
+  if (buttonPressedStartTime > 0 && millis() - buttonPressedStartTime >= resetButtonDuration) {
+    // Button has been pressed for the specified duration, initiate reset
+    Serial.println("Reset button pressed for 10 seconds. Performing reset...");
+
+    // Close any open files or connections before restarting
+    SPIFFS.end();
+
+    // Delay for a moment (optional)
+    delay(1000);
+
+    // Restart the ESP32
+    ESP.restart();
+  }
+}
+
 void setup() {
   // Serial port for debugging purposes
   Serial.begin(115200);
@@ -142,12 +171,12 @@ void setup() {
   // Set GPIO 2 as an OUTPUT
   pinMode(ledPin, OUTPUT);
   digitalWrite(ledPin, LOW);
-  
+
   // Load values saved in SPIFFS
   ssid = readFile(SPIFFS, ssidPath);
   pass = readFile(SPIFFS, passPath);
   ip = readFile(SPIFFS, ipPath);
-  gateway = readFile (SPIFFS, gatewayPath);
+  gateway = readFile(SPIFFS, gatewayPath);
   Serial.println(ssid);
   Serial.println(pass);
   Serial.println(ip);
@@ -227,7 +256,6 @@ void setup() {
             // Write file to save value
             writeFile(SPIFFS, gatewayPath, gateway.c_str());
           }
-          //Serial.printf("POST[%s]: %s\n", p->name().c_str(), p->value().c_str());
         }
       }
       request->send(200, "text/plain", "Done. ESP will restart, connect to your router and go to IP address: " + ip);
@@ -235,8 +263,13 @@ void setup() {
       ESP.restart();
     });
     server.begin();
+
+      // Set the reset button pin as INPUT_PULLUP
+  pinMode(resetButtonPin, INPUT_PULLUP);
+
   }
 }
-void loop() {
-}
 
+void loop() {
+  checkResetButton();
+}
