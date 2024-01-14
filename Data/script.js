@@ -1,64 +1,22 @@
 
-// var gateway = `ws://${window.location.hostname}/ws`;
-// var websocket;
-// // Init web socket when the page loads
-// window.addEventListener('load', onload);
 
-// function onload(event) {
-//     initWebSocket();
-// }
-
-// function getReadings(){
-//     websocket.send("getReadings");
-// }
-
-// function initWebSocket() {
-//     console.log('Trying to open a WebSocket connection…');
-//     websocket = new WebSocket(gateway);
-//     websocket.onopen = onOpen;
-//     websocket.onclose = onClose;
-//     websocket.onmessage = onMessage;
-// }
-
-// // When websocket is established, call the getReadings() function
-// function onOpen(event) {
-//     console.log('Connection opened');
-//     getReadings();
-// }
-
-// function onClose(event) {
-//     console.log('Connection closed');
-//     setTimeout(initWebSocket, 2000);
-// }
-
-// // Function that receives the message from the ESP32 with the readings
-// function onMessage(event) {
-//     console.log(event.data);
-//     var myObj = JSON.parse(event.data);
-//     var keys = Object.keys(myObj);
-
-//     for (var i = 0; i < keys.length; i++){
-//         var key = keys[i];
-//         document.getElementById(key).innerHTML = myObj[key];
-//     }
-// }
-
+// Code adapted from https://randomnerdtutorials.com/
+// Consulted ChatGPT for guidance on handling edge cases
 
 
 var gateway = `ws://${window.location.hostname}/ws`;
 var websocket;
-var chartT;
 
-// Init web socket when the page loads
-window.addEventListener('load', function (event) {
+// init web socket when page loads
+window.addEventListener('load', onload);
+
+
+function onload(event) {
     initWebSocket();
-    getReadings();
-});
+}
 
-function getReadings() {
-    if (websocket.readyState === WebSocket.OPEN) {
-        websocket.send("getReadings");
-    }
+function getReadings(){
+    websocket.send("getReadings");
 }
 
 function initWebSocket() {
@@ -73,47 +31,13 @@ function initWebSocket() {
 function onOpen(event) {
     console.log('Connection opened');
     getReadings();
-
-    // Initialize the Highcharts chart 
-    chartT = new Highcharts.Chart({
-        chart: {
-            renderTo: 'chart-temperature'
-        },
-        series: [
-            {
-                name: 'Temperature',
-                type: 'line',
-                color: '#101D42',
-                marker: {
-                    symbol: 'circle',
-                    radius: 3,
-                    fillColor: '#101D42',
-                }
-            }
-        ],
-        title: {
-            text: undefined
-        },
-        xAxis: {
-            type: 'datetime',
-            dateTimeLabelFormats: { second: '%H:%M:%S' }
-        },
-        yAxis: {
-            title: {
-                text: 'Temperature Celsius Degrees'
-            }
-        },
-        credits: {
-            enabled: false
-        }
-    });
 }
-
 
 function onClose(event) {
-    console.log('Connection closed');
+    console.log('Connection closed',event);
     setTimeout(initWebSocket, 2000);
 }
+
 
 // Function that receives the message from the ESP32 with the readings
 function onMessage(event) {
@@ -121,69 +45,139 @@ function onMessage(event) {
     var myObj = JSON.parse(event.data);
     var keys = Object.keys(myObj);
 
-    for (var i = 0; i < keys.length; i++) {
+    for (var i = 0; i < keys.length; i++){
         var key = keys[i];
-        document.getElementById(key).innerHTML = myObj[key];
+        document.getElementById("temperature").innerHTML = myObj[key];
     }
+    plotTemperature(myObj)
+}
+    // Initialize the Highcharts chart 
+    var chartOptions = {
+        chart:{
+          renderTo:'chart-temperature'
+        },
+        series: [
+          {
+            // Specifications for the grap visuals
+            name: 'Temperature C',
+            type: 'spline',
+            color: '#2FCDE4',
+            fillColor: '#D8F7FB',
+            marker: {
+              symbol: 'circle',
+              radius: 3,
+              fillColor: '#27285D',
+            }
+          }
+        ],
+        title: {
+          text: undefined
+        },
+        xAxis: {
+          type: 'datetime',
+          dateTimeLabelFormats: { second: '%Y-%m-%d %H:%M:%S' }
+        },
+        yAxis: {
+          title: {
+            text: 'Temperature Celsius Degrees'
+          }
+        },
+        credits: {
+           enabled: false
+        }
+      };
 
-    plotTemperature(myObj);
+    var chartT=new Highcharts.Chart('chart-temperature',chartOptions);
+    // Removes current graph and rebuilds it
+    function clearGraph(){
+        console.log("Clear graph")
+        chartT.series[0].setData([], true, true, true);
+        // chartT.destroy();
+        // chartT = new Highcharts.Chart(chartOptions);
+        getReadings();
+      }
+      
+      // // Deletes content of temperature.csv
+      // function deleteFile(){
+      //   console.log("Delete content of CSV file");
+      //   fetch("/data.csv",{method: "DELETE"}).then((res) => console.log(res.text()));
+      // }
+
+      // Deletes content of temperature.csv
+function deleteFile() {
+  console.log("Delete content of CSV file");
+
+  // Get the element where you want to display the result message
+  var resultMessageElement = document.getElementById("result-message");
+
+  // Clear any previous messages
+  resultMessageElement.innerText = "";
+
+  fetch("/data.csv", { method: "DELETE" })
+      .then((res) => {
+          // Check if the deletion was successful
+          if (res.ok) {
+              // Display a success message
+              resultMessageElement.innerText = "Data deleted successfully!";
+          } else {
+              // Display an error message
+              resultMessageElement.innerText = "Failed to delete data.";
+          }
+      })
+      .catch((error) => {
+          // Display an error message
+          console.error("Error deleting data:", error);
+          resultMessageElement.innerText = "Error deleting data.";
+      });
 }
 
 
-// Plot temperature in the temperature chart(changed)
-function plotTemperature(jsonValue) {
- 
-    var x = (new Date()).getTime();
-    var y = Number(jsonValue["sensor"]);
-  
-    if(chartT.series[0].data.length > 40) {
-      chartT.series[0].addPoint([x, y], true, true, true);
-    } else {
-      chartT.series[0].addPoint([x, y], true, false, true);
+      function downloadCSV() {
+        var link = document.createElement("a");
+        link.href = "/data.csv";
+        link.download = "temprature_data.csv";
+        link.click();
+      }
+    
+      
+    //Plot temperature in the temperature chart
+    function plotTemperature(jsonValue) {
+    
+    var keys = Object.keys(jsonValue);
+    console.log(keys);
+    console.log(keys.length);
+    
+    for (var i = 0; i < keys.length; i++){
+      var x = (new Date()).getTime();
+      console.log(x);
+      const key = keys[i];
+      var y = Number(jsonValue[key]);
+      console.log(y);
+    
+      if(chartT.series[i].data.length > 40) {
+        chartT.series[i].addPoint([x, y], true, true, true);
+      } else {
+        chartT.series[i].addPoint([x, y], true, false, true);
+      }
+    
     }
+    }
+    
+    
+    
+    
+    
+    
+    
+    
 
-  }
 
 
 
-// Function to get current readings on the webpage when it loads for the first time
-function getReadings() {
-    var xhr = new XMLHttpRequest();
-    xhr.onreadystatechange = function () {
-        if (this.readyState == 4 && this.status == 200) {
-            var myObj = JSON.parse(this.responseText);
-            console.log(myObj);
-            plotTemperature(myObj);
-        }
-    };
-    xhr.open("GET", "/readings", true);
-    xhr.send();
-}
 
-if (!!window.EventSource) {
-    var source = new EventSource('/events');
 
-    source.addEventListener('open', function (e) {
-        console.log("Events Connected");
-    }, false);
 
-    source.addEventListener('error', function (e) {
-        if (e.target.readyState != EventSource.OPEN) {
-            console.log("Events Disconnected");
-        }
-    }, false);
 
-    source.addEventListener('message', function (e) {
-        console.log("message", e.data);
-    }, false);
-
-    source.addEventListener('new_readings', function (e) {
-        console.log("new_readings", e.data);
-        var myObj = JSON.parse(e.data);
-        console.log(myObj);
-        plotTemperature(myObj);
-    }, false);
-}
 
 
 

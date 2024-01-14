@@ -1,39 +1,63 @@
-<!DOCTYPE html>
-<html>
-  <head>
-    <title>IOT DASHBOARD</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="stylesheet.css">
-    <link rel="icon" type="image/png" href="favicon.png">
-    
-    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous">
-    <script src="https://code.highcharts.com/highcharts.js"></script>
-  </head>
-  <body>
-    <div class="topnav">
-      <h1>ESP WEB SERVER</h1>
-    </div>
-    <div class="content">
-      <div class="card-grid">
-        <div class="card">
-          <p class="card-title"> 
-            <i class="fas fa-thermometer-half" style="color:#059e8a;"></i> Temperature </p>
-        <p class = "reading"> <span id ="temperature"> </span> &deg;C</p>
+ 
+ <!-- Code snippet from https://randomnerdtutorials.com/ -->
+ <!-- Consulted ChatGPT for guidance on handling edge cases -->
+ 
+ 
+ <!DOCTYPE HTML>
+ <html lang="en">
+ <head>
+   <meta name="viewport" content="width=device-width, initial-scale=1">
+   <link rel="stylesheet" type="text/css" href="stylesheet.css">
+   <script src="https://code.highcharts.com/highcharts.js"></script>
+   <link rel="icon" type="image/png" href="favicon.png">
+   <!-- Bootstrap CSS Link -->
+   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
+ </head>
+ <body>
+     <nav class="navbar navbar-expand-lg navbar-light bg-light">
+         <div class="container-fluid"> 
+             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                 <span class="navbar-toggler-icon"></span>
+             </button>
+             <div id="result-message"></div>
+ 
+             <div class="collapse navbar-collapse" id="navbarNav">
+                 <ul class="navbar-nav">
+                     <li class="nav-item">
+                         <a class="nav-link" href="#" onclick="clearGraph()">Clear Graph Readings</a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link" href="#" onclick="downloadCSV()">Download CSV File</a>
+                     </li>
+                     <li class="nav-item">
+                         <a class="nav-link" href="#" onclick="deleteFile()">Delete Content Of CSV</a>
+                     </li>
+                 </ul>
+             </div>
+         </div>
+     </nav>
+
+ 
+     <div class="content"> 
+         <div class="card-grid">
+             <div class="card">
+                 <p class="card-title"> Temperature Graph</p>
+                 <div id="chart-temperature" class="chart-container"></div>
+             </div>  
+         </div> 
         
-        <div id = "chart-temperature" class="chart-container"></div>
-
-          <!-- <p class="card-title"><i class="fas fa-lightbulb"></i> GPIO 2</p>
-          <p>
-            <a href="on"><button class="button-on">ON</button></a>
-            <a href="off"><button class="button-off">OFF</button></a>
-          </p>
-          <p class="state">State: %STATE%</p> -->
-        </div>
-      </div>
-    </div>
-
-   
-    <script src="script.js"></script>
-  </body>
-</html>
-
+         <div class="card-grid">
+             <div class="card">
+                 <p class="card-title"><i class="fas fa-thermometer-half" style="color:#059e8a;"></i> Temperature</p>
+                 <p class="reading"><span id="temperature"></span> &deg;C</p>
+             </div>
+         </div>
+     </div>
+ 
+     <script src="script.js"></script>
+ 
+     <!-- Bootstrap JS Scripts -->
+     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-C6RzsynM9kWDrMNeT87bh95OGNyZPhcTNXj1NW7RuBCsyN/o0jlpcV8Qyq46cDfL" crossorigin="anonymous"></script>
+ </body>
+ </html>
+ 

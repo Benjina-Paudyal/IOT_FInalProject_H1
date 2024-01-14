@@ -10,6 +10,16 @@ html {
   color: white;
 }
 
+.navbar-brand{
+  color:#1282A2;
+}
+
+
+.navbar-link{
+  color:#1282A2;
+  
+}
+
   h2 {
     font-size: 1.8rem; 
     color: white;
@@ -19,49 +29,33 @@ html {
     font-size: 1.4rem;
   }
   
-  .topnav { 
-    overflow: hidden; 
-    background-color:  hsl(226, 80%, 61%);
-  }
-  
-  
+
   body {  
     margin: 0;
+    padding: 0;
   }
   
-  .content { 
-    padding: 50px;
-  }
-  
-  .card-grid { 
-    max-width: 1200px; 
-    margin: 0 auto; 
-    display: grid; 
-    grid-gap: 2rem; 
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-  
-  .card { 
-    background-color: white; 
-    box-shadow: 2px 2px 12px 1px rgba(140,140,140,.5);
-  }
-  
-  .card-title { 
-    font-size: 1.2rem;
-    font-weight: bold;
-    color: #034078
-  }
+  .navbar-nav .nav-item {
+    margin-right: 10px;
+}
 
-  .chart-container {
-    padding-right: 5%;
-    padding-left: 5%;
-  }
-  .reading {
-    font-size: 1.2rem;
+.navbar-nav .nav-link {
+    color: #4431a3;
     font-weight: bold;
-    color: #034078;
-  }
-  
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.navbar-nav .nav-link:hover {
+    color: #059e8a;
+}
+
+  #chart-temperature {
+    height: 300px; 
+    margin-top: 50px; 
+}
+
+
   input[type=submit] {
     border: none;
     color: #FEFCFB;
